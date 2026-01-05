@@ -34,6 +34,7 @@
                 <option value="09:00AM - 06:00PM">09:00AM - 06:00PM</option>
                 <option value="06:00PM - 03:00AM">06:00PM - 03:00AM</option>
             </select>
+            <input type="text" id="note" placeholder="Add a note (optional)" maxlength="100" style="flex:1; min-width:120px;">
             <button type="submit">Mark Attendance</button>
         </form>
         <table id="attendanceTable">
@@ -42,6 +43,7 @@
                     <th>Date</th>
                     <th>Name</th>
                     <th>Shift</th>
+                    <th>Note</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,7 +66,7 @@
             tableBody.innerHTML = '';
             records.forEach(record => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td>`;
+                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td><td>${record.note ? record.note : ''}</td>`;
                 tableBody.appendChild(tr);
             });
         }
@@ -73,9 +75,10 @@
             e.preventDefault();
             const name = document.getElementById('name').value;
             const shift = document.getElementById('shift').value;
+            const note = document.getElementById('note').value.trim();
             const date = getToday();
             const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            records.push({ date, name, shift });
+            records.push({ date, name, shift, note });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             loadAttendance();
             form.reset();
