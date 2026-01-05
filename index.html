@@ -44,6 +44,7 @@
                     <th>Name</th>
                     <th>Shift</th>
                     <th>Note</th>
+                    <th>Marked Time</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,9 +67,14 @@
             tableBody.innerHTML = '';
             records.forEach(record => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td><td>${record.note ? record.note : ''}</td>`;
+                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td><td>${record.note ? record.note : ''}</td><td>${record.time ? record.time : ''}</td>`;
                 tableBody.appendChild(tr);
             });
+        }
+
+        function getCurrentTime() {
+            const d = new Date();
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
         form.addEventListener('submit', function(e) {
@@ -77,8 +83,9 @@
             const shift = document.getElementById('shift').value;
             const note = document.getElementById('note').value.trim();
             const date = getToday();
+            const time = getCurrentTime();
             const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            records.push({ date, name, shift, note });
+            records.push({ date, name, shift, note, time });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             loadAttendance();
             form.reset();
