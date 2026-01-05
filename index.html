@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Attendance System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px 32px 32px 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #2d5c3b; }
+        form { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-bottom: 24px; }
+        select, button { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #2d5c3b; color: #fff; border: none; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #1e3d27; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { padding: 10px; border: 1px solid #e0e0e0; text-align: center; }
+        th { background: #2d5c3b; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Attendance Marking System</h2>
+        <form id="attendanceForm">
+            <select id="name" required>
+                <option value="" disabled selected>Select Name</option>
+                <option value="Chamudi">Chamudi</option>
+                <option value="Dulag">Dulag</option>
+                <option value="Lahiru">Lahiru</option>
+            </select>
+            <select id="shift" required>
+                <option value="" disabled selected>Select Shift</option>
+                <option value="03:00AM - 09:00PM">03:00AM - 09:00PM</option>
+                <option value="09:00AM - 06:00PM">09:00AM - 06:00PM</option>
+                <option value="06:00PM - 03:00AM">06:00PM - 03:00AM</option>
+            </select>
+            <button type="submit">Mark Attendance</button>
+        </form>
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Shift</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Attendance records will appear here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        const form = document.getElementById('attendanceForm');
+        const tableBody = document.querySelector('#attendanceTable tbody');
+        const STORAGE_KEY = 'attendance_records';
+
+        function getToday() {
+            const d = new Date();
+            return d.toISOString().slice(0, 10); // YYYY-MM-DD
+        }
+
+        function loadAttendance() {
+            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            tableBody.innerHTML = '';
+            records.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td>`;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const shift = document.getElementById('shift').value;
+            const date = getToday();
+            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            records.push({ date, name, shift });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            loadAttendance();
+            form.reset();
+        });
+
+        // Initial load
+        loadAttendance();
+    </script>
+</body>
+</html>
