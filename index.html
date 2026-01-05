@@ -16,6 +16,9 @@
         th, td { padding: 10px; border: 1px solid #e0e0e0; text-align: center; }
         th { background: #2d5c3b; color: #fff; }
         tr:nth-child(even) { background: #f9f9f9; }
+            td.note { cursor: pointer; text-align: left; }
+            td.note .hint { color: #888; font-size: 0.9rem; }
+            input.note-edit { width: 100%; box-sizing: border-box; padding: 6px; }
     </style>
 </head>
 <body>
@@ -62,13 +65,83 @@
             return d.toISOString().slice(0, 10); // YYYY-MM-DD
         }
 
+        // Enable inline editing for the Note column only
+        tableBody.addEventListener('click', function (e) {
+            const td = e.target.closest('td.note');
+            if (!td) return; // clicked outside note cell
+            const tr = td.parentElement;
+            const idx = Number(tr.dataset.index);
+            if (Number.isNaN(idx)) return;
+
+            // Prevent creating multiple inputs
+            if (td.querySelector('input.note-edit')) return;
+
+            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const current = records[idx] && records[idx].note ? records[idx].note : '';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'note-edit';
+            input.value = current;
+            input.maxLength = 200;
+
+            // replace content
+            td.innerHTML = '';
+            td.appendChild(input);
+            input.focus();
+
+            function saveAndCleanup() {
+                const newVal = input.value.trim();
+                records[idx].note = newVal;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                loadAttendance();
+            }
+
+            function cancelAndCleanup() {
+                loadAttendance();
+            }
+
+            // save on Enter, cancel on Escape
+            input.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    saveAndCleanup();
+                } else if (ev.key === 'Escape') {
+                    ev.preventDefault();
+                    cancelAndCleanup();
+                }
+            });
+
+            // save on blur
+            input.addEventListener('blur', function () {
+                saveAndCleanup();
+            });
+        });
+
         function loadAttendance() {
             const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             tableBody.innerHTML = '';
-            records.forEach(record => {
+            records.forEach((record, idx) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${record.date}</td><td>${record.name}</td><td>${record.shift}</td><td>${record.note ? record.note : ''}</td><td>${record.time ? record.time : ''}</td>`;
+                tr.dataset.index = idx; // map row to record index
+                const noteText = record.note ? (`<span class="note-text">${escapeHtml(record.note)}</span>`) : `<span class="hint">(click to add)</span>`;
+                tr.innerHTML = `<td>${record.date}</td><td>${escapeHtml(record.name)}</td><td>${escapeHtml(record.shift)}</td><td class="note">${noteText}</td><td>${record.time ? record.time : ''}</td>`;
                 tableBody.appendChild(tr);
+            });
+        }
+
+        // simple HTML escape to avoid injection when rendering note text
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"'`]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '`': '&#96;'
+                })[s];
             });
         }
 
