@@ -6,13 +6,29 @@
     <title>Simple Attendance System</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
-    .container { max-width: 100vw; width: 100vw; margin: 0; background: #fff; padding: 24px 0 32px 0; border-radius: 0; box-shadow: none; }
+    .container {
+        max-width: 95vw;
+        width: 95vw;
+        margin: 2.5vh 2.5vw 0 2.5vw;
+        background: #fff;
+        padding: 24px 0 32px 0;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
         h2 { text-align: center; color: #2d5c3b; }
         form { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-bottom: 24px; }
         select, button { padding: 8px 12px; font-size: 1rem; border-radius: 5px; border: 1px solid #ccc; }
         button { background: #2d5c3b; color: #fff; border: none; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #1e3d27; }
-    table { width: 100vw; min-width: 100vw; border-collapse: collapse; margin-top: 16px; }
+    table {
+        width: 100%;
+        min-width: 0;
+        border-collapse: collapse;
+        margin-top: 16px;
+    }
         th, td { padding: 10px; border: 1px solid #e0e0e0; text-align: center; }
         th { background: #2d5c3b; color: #fff; }
         tr:nth-child(even) { background: #f9f9f9; }
@@ -51,6 +67,7 @@
                 vertical-align: middle;
                 display: inline-block;
             }
+/* Remove button styles moved to the main <style> block above */
     </style>
 </head>
 <body>
@@ -80,6 +97,7 @@
                     <th>Shift</th>
                     <th>Note</th>
                     <th>Marked Time</th>
+                    <th>Remove</th>
                 </tr>
             </thead>
             <tbody>
@@ -163,10 +181,25 @@
                     showDate = record.date;
                     lastDate = record.date;
                 }
-                tr.innerHTML = `<td>${showDate}</td><td>${escapeHtml(record.name)}</td><td>${escapeHtml(record.shift)}</td><td class="note">${noteText}</td><td>${record.time ? record.time : ''}</td>`;
+                tr.innerHTML = `<td>${showDate}</td><td>${escapeHtml(record.name)}</td><td>${escapeHtml(record.shift)}</td><td class="note">${noteText}</td><td>${record.time ? record.time : ''}</td><td><button class="remove-btn" title="Remove this entry">Remove</button></td>`;
                 tableBody.appendChild(tr);
             });
         }
+        // Remove row handler
+        tableBody.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-btn')) {
+                const tr = e.target.closest('tr');
+                const idx = Number(tr.dataset.index);
+                if (Number.isNaN(idx)) return;
+                if (confirm('Are you sure you want to remove this attendance entry?')) {
+                    const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    records.splice(idx, 1);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                    loadAttendance();
+                }
+            }
+        });
+        
 
         // simple HTML escape to avoid injection when rendering note text
         function escapeHtml(str) {
